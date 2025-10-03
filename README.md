@@ -2,7 +2,7 @@
 
 About the dataset :
 
-In the attribute table, there is a field called OAM, which contains the OpenAerialMap link or the link to the image which was used to generate the polygon or coverage sample.
+In the attribute table, there is a field called OpenAerialMap (OAM) , which contains the OpenAerialMap link or the link to the image which was used to generate the polygon or coverage sample.
 In some cases, the image didn’t come directly from OAM, so there is a the Drive folder link in that same field.
 The codigo field corresponds to the different land cover samples found in the area. To see what each code means, check the Observ field, where it’s described.
 
@@ -33,6 +33,6 @@ The codigo field corresponds to the different land cover samples found in the ar
 - Canals: 3
 - Forest: 1
 
-**Total samples in the dataset: 1,953**
+**Total samples in the dataset: 1,953 , 24 distinct classes**
 
 You can check the [data centroid file](./data/data_centroid.geojson) to visualize the spatial distribution of the dataset.
