@@ -1,6 +1,8 @@
 import asyncio
+from pathlib import Path
 from urllib.parse import urlparse
 
+import gdown
 import httpx
 from tqdm.asyncio import tqdm as atqdm
 
@@ -61,3 +63,61 @@ async def build_image_download_uri(gdf, url_column, max_workers=50):
 
 def build_image_download_uri_sync(gdf, url_column, max_workers=50):
     return asyncio.run(build_image_download_uri(gdf, url_column, max_workers))
+
+
+async def download_images(gdf, output_dir, max_workers=20):
+    output_path = Path(output_dir)
+    output_path.mkdir(parents=True, exist_ok=True)
+
+    semaphore = asyncio.Semaphore(max_workers)
+    unique_images = gdf[["image_uid", "download_url", "url_type"]].drop_duplicates(
+        "image_uid"
+    )
+
+    async def download_single(row):
+        async with semaphore:
+            image_uid = row["image_uid"]
+            download_url = row["download_url"]
+            url_type = row["url_type"]
+
+            if not image_uid or not download_url:
+                return None
+
+            output_file = output_path / f"{image_uid}.tif"
+
+            if output_file.exists():
+                return str(output_file)
+
+            try:
+                if url_type == "oam":
+                    async with httpx.AsyncClient(timeout=300) as client:
+                        response = await client.get(download_url)
+                        response.raise_for_status()
+                        output_file.write_bytes(response.content)
+                        return str(output_file)
+
+                elif url_type == "gdrive":
+                    await asyncio.to_thread(
+                        gdown.download,
+                        download_url,
+                        str(output_file),
+                        quiet=False,
+                        fuzzy=True,
+                    )
+                    return str(output_file)
+
+            except Exception as e:
+                print(f"Failed {image_uid}: {e}")
+                return None
+
+    tasks = [download_single(row) for _, row in unique_images.iterrows()]
+    results = []
+
+    for coro in atqdm.as_completed(tasks, total=len(tasks), desc="Downloading images"):
+        results.append(await coro)
+
+    return [r for r in results if r]
+
+
+def download_images_sync(gdf, output_dir, max_workers=20):
+    return asyncio.run(download_images(gdf, output_dir, max_workers))
