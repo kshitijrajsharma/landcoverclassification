@@ -1,10 +1,30 @@
 import asyncio
 from pathlib import Path
-from urllib.parse import urlparse
-
 import gdown
 import httpx
 from tqdm.asyncio import tqdm as atqdm
+
+
+import hashlib
+
+import pandas as pd
+
+
+def assign_image_uids(gdf, url_column="download_url"):
+    url_to_uid = {}
+
+    def get_uid(url):
+        if pd.isna(url) or url is None:
+            return None
+        if url not in url_to_uid:
+            hash_suffix = hashlib.md5(url.encode()).hexdigest()[:8]
+            uid_count = len(url_to_uid)
+            url_to_uid[url] = f"img_{uid_count:04d}_{hash_suffix}"
+        return url_to_uid[url]
+
+    gdf["image_uid"] = gdf[url_column].apply(get_uid)
+
+    return gdf, url_to_uid
 
 
 async def build_image_download_uri(gdf, url_column, max_workers=50):
@@ -13,50 +33,35 @@ async def build_image_download_uri(gdf, url_column, max_workers=50):
     async def fetch_oam_data(url):
         async with semaphore:
             if not isinstance(url, str):
-                return None, None, None
+                return None, None
 
-            parsed = urlparse(url)
-
-            if "openaerialmap.org" in parsed.netloc:
-                image_id = url.rstrip("/").split("/")[-1].split("?")[0]
-                api_url = f"https://api.openaerialmap.org/meta/{image_id}/"
+            if "map.openaerialmap.org" in url:
+                uuid = url.rstrip('/').split('/')[-1].split('?')[0]
+                api_url = f"https://api.openaerialmap.org/meta/{uuid}"
 
                 try:
                     async with httpx.AsyncClient(timeout=10) as client:
                         response = await client.get(api_url)
                         response.raise_for_status()
                         data = response.json()
-                        results = data.get("results", {})
-
-                        return (
-                            "oam",
-                            results.get("uuid"),
-                            results.get("properties", {}).get("tms"),
-                        )
+                        return "oam", data.get("results", {}).get("uuid")
                 except (httpx.HTTPError, ValueError, KeyError):
-                    return "oam", None, None
+                    return "oam", None
 
-            elif (
-                "drive.google.com" in parsed.netloc
-                or "docs.google.com" in parsed.netloc
-            ):
-                return "gdrive", url, None
+            elif "drive.google.com" in url or "docs.google.com" in url:
+                return "gdrive", url
 
-            return "other", None, None
+            return "other", None
 
     urls = gdf[url_column].tolist()
-
     tasks = [fetch_oam_data(url) for url in urls]
+    
     results = []
-
-    for coro in atqdm.as_completed(
-        tasks, total=len(tasks), desc="Processing imagery links"
-    ):
-        results.append(await coro)
+    for task in atqdm(tasks, desc="Processing imagery links"):
+        results.append(await task)
 
     gdf["url_type"] = [r[0] for r in results]
     gdf["download_url"] = [r[1] for r in results]
-    gdf["tms_url"] = [r[2] for r in results]
 
     return gdf
 

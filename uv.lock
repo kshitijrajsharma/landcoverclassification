@@ -537,6 +537,7 @@ dependencies = [
     { name = "geopandas" },
     { name = "httpx" },
     { name = "ipykernel" },
+    { name = "numpy" },
     { name = "rasterio" },
     { name = "tqdm" },
 ]
@@ -553,6 +554,7 @@ requires-dist = [
     { name = "geopandas", specifier = ">=1.1.1" },
     { name = "httpx", specifier = ">=0.28.1" },
     { name = "ipykernel", specifier = ">=6.30.1" },
+    { name = "numpy", specifier = ">=2.3.3" },
     { name = "rasterio", specifier = ">=1.4.3" },
     { name = "tqdm", specifier = ">=4.67.1" },
 ]
