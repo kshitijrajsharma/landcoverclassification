@@ -23,3 +23,9 @@ for tif_file in "${files[@]}"; do
     
     gdal_translate -q -of COG -co COMPRESS=LZW -co BIGTIFF=YES -ot Byte -scale "$tif_file" "$output_file"
 done
+
+cd "$COG_FOLDER"
+find "$(pwd)" -type f -name "*.tif" -print > coglist.txt
+cogeo-mosaic create coglist.txt -o mosaic.json
+
+
