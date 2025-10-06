@@ -45,3 +45,10 @@ The codigo field corresponds to the different land cover samples found in the ar
 **Total samples in the dataset: 1,953 , 24 distinct classes**
 
 You can check the [data centroid file](./data/data_centroid.geojson) to visualize the  distribution interactively.
+
+
+### Project Setup 
+
+```bash
+uv sync
+```
