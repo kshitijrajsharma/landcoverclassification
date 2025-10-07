@@ -77,3 +77,29 @@ uv sync
 # Activate environment
 source .venv/bin/activate
 ```
+
+## Usage
+
+### Notebook Workflow
+
+1. **Dataset Distribution** - First, see the dataset distribution:
+   ```bash
+   jupyter notebook notebooks/distribution.ipynb
+   ```
+
+2. **Preprocessing** - Preprocess the data (download images, build URLs):
+   ```bash
+   jupyter notebook notebooks/preprocess.ipynb
+   ```
+
+3. **Stats Computation** - After preprocessing, build the features (compute raster statistics):
+   ```bash
+   jupyter notebook notebooks/stats_computation.ipynb
+   ```
+   This will build the features for your model.
+
+### Convert to COG
+Standardize images to Cloud Optimized GeoTIFF: ( This is part of preprocess notebook)
+```bash
+./tif2cog.sh data/images
+```
