@@ -5,34 +5,34 @@ from tqdm import tqdm
 import geopandas as gpd
 from skimage import color
 from scipy.stats import circmean, circstd
-import os 
 
 def compute_raster_stats(gdf, image_uid_col='image_uid', base_url='https://files.krschap.tech/api/public/dl/RGNv3CL4'):
     def process_polygon(idx, row):
-        cog_url = os.path.join(base_url,f"{row[image_uid_col]}.tif")
-        
-        with rasterio.open(cog_url) as src:
-            geom_gdf = gpd.GeoDataFrame([row], geometry='geometry', crs=gdf.crs)
-            geom_reprojected = geom_gdf.to_crs(src.crs)
-            geom_transformed = [geom_reprojected.geometry.iloc[0].__geo_interface__]
+        try:
+            cog_url = f"{base_url}/{row[image_uid_col]}.tif"
             
-            masked_data, _ = mask(src, geom_transformed, crop=True, all_touched=False)
-
-            r_band = masked_data[0]
-            g_band = masked_data[1]
-            b_band = masked_data[2]
-            
-            is_masked = np.ma.isMaskedArray(r_band)
-            
-            if is_masked:
-                valid_mask = ~(r_band.mask | g_band.mask | b_band.mask)
-            else:
-                nodata = src.nodata if src.nodata is not None else -9999
-                valid_mask = (r_band != nodata) & (g_band != nodata) & (b_band != nodata)
-            
-            r_valid = r_band[valid_mask]
-            g_valid = g_band[valid_mask]
-            b_valid = b_band[valid_mask]
+            with rasterio.open(cog_url) as src:
+                geom_gdf = gpd.GeoDataFrame([row], geometry='geometry', crs=gdf.crs)
+                geom_reprojected = geom_gdf.to_crs(src.crs)
+                geom_transformed = [geom_reprojected.geometry.iloc[0].__geo_interface__]
+                
+                masked_data, _ = mask(src, geom_transformed, crop=True, all_touched=False)
+                
+                r_band = masked_data[0].copy()
+                g_band = masked_data[1].copy()
+                b_band = masked_data[2].copy()
+                
+                is_masked = np.ma.isMaskedArray(r_band)
+                
+                if is_masked:
+                    valid_mask = ~(r_band.mask | g_band.mask | b_band.mask)
+                else:
+                    nodata = src.nodata if src.nodata is not None else -9999
+                    valid_mask = (r_band != nodata) & (g_band != nodata) & (b_band != nodata)
+                
+                r_valid = r_band[valid_mask].copy()
+                g_valid = g_band[valid_mask].copy()
+                b_valid = b_band[valid_mask].copy()
             
             stats = {}
             
@@ -63,17 +63,10 @@ def compute_raster_stats(gdf, image_uid_col='image_uid', base_url='https://files
                 stats['g_b_mean'] = float(np.nanmean(g_b))
                 stats['g_b_std'] = float(np.nanstd(g_b))
                 
-                r_minus_g = r_valid - g_valid
-                g_minus_b = g_valid - b_valid
-                
-                stats['r_minus_g_mean'] = float(np.mean(r_minus_g))
-                stats['r_minus_g_std'] = float(np.std(r_minus_g))
-                stats['g_minus_b_mean'] = float(np.mean(g_minus_b))
-                stats['g_minus_b_std'] = float(np.std(g_minus_b))
-                
-                rgb_stack = np.stack([r_band[valid_mask], g_band[valid_mask], b_band[valid_mask]], axis=-1)
+                rgb_stack = np.stack([r_valid, g_valid, b_valid], axis=-1)
                 rgb_norm = rgb_stack / 255.0 if rgb_stack.max() > 1 else rgb_stack
                 
+                # https://scikit-image.org/docs/stable/api/skimage.color.html#skimage.color.rgb2hsv
                 hsv = color.rgb2hsv(rgb_norm.reshape(1, -1, 3)).reshape(-1, 3)
                 stats['hsv_s_mean'] = float(np.mean(hsv[:, 1]))
                 stats['hsv_v_mean'] = float(np.mean(hsv[:, 2]))
@@ -82,6 +75,7 @@ def compute_raster_stats(gdf, image_uid_col='image_uid', base_url='https://files
                 stats['hsv_h_mean'] = float(circmean(hue_rad))
                 stats['hsv_h_std'] = float(circstd(hue_rad))
                 
+                # https://scikit-image.org/docs/stable/api/skimage.color.html#skimage.color.rgb2lab
                 lab = color.rgb2lab(rgb_norm.reshape(1, -1, 3)).reshape(-1, 3)
                 stats['lab_l_mean'] = float(np.mean(lab[:, 0]))
                 stats['lab_a_mean'] = float(np.mean(lab[:, 1]))
@@ -98,21 +92,26 @@ def compute_raster_stats(gdf, image_uid_col='image_uid', base_url='https://files
                     'g_mean', 'g_median', 'g_std', 'g_var',
                     'b_mean', 'b_median', 'b_std', 'b_var',
                     'r_g_mean', 'r_g_std', 'r_b_mean', 'r_b_std', 'g_b_mean', 'g_b_std',
-                    'r_minus_g_mean', 'r_minus_g_std', 'g_minus_b_mean', 'g_minus_b_std',
                     'hsv_s_mean', 'hsv_v_mean', 'hsv_h_mean', 'hsv_h_std',
                     'lab_l_mean', 'lab_a_mean', 'lab_b_mean',
                     'vari_mean', 'vari_std'
                 ]}
             
             return idx, stats
+        except Exception as ex:
+            raise ex
     
-    results = {}
-    for idx, row in tqdm(gdf.iterrows(), total=len(gdf), desc="Processing polygons"):
-        result_idx, stats = process_polygon(idx, row)
-        results[result_idx] = stats
+    stat_cols = ['r_mean', 'r_median', 'r_std', 'r_var', 'g_mean', 'g_median', 'g_std', 'g_var',
+                 'b_mean', 'b_median', 'b_std', 'b_var', 'r_g_mean', 'r_g_std', 'r_b_mean', 
+                 'r_b_std', 'g_b_mean', 'g_b_std', 'hsv_s_mean', 'hsv_v_mean', 'hsv_h_mean', 
+                 'hsv_h_std', 'lab_l_mean', 'lab_a_mean', 'lab_b_mean', 'vari_mean', 'vari_std']
     
-    stat_cols = list(results[next(iter(results))].keys())
     for col in stat_cols:
-        gdf[col] = [results[idx][col] for idx in gdf.index]
+        gdf[col] = np.nan
+    
+    for idx, row in tqdm(gdf.iterrows(), total=len(gdf), desc="Processing polygons"):
+        _, stats = process_polygon(idx, row)
+        for col in stat_cols:
+            gdf.at[idx, col] = stats[col]
     
     return gdf
