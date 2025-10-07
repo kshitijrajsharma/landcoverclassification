@@ -47,8 +47,33 @@ The codigo field corresponds to the different land cover samples found in the ar
 You can check the [data centroid file](./data/data_centroid.geojson) to visualize the  distribution interactively.
 
 
-### Project Setup 
+### Project Setup
+
+Land cover classification using drone imagery and polygon features with statistical analysis.
+
+### Project Structure
+
+```
+├── src/                    
+│   ├── preprocess.py      
+│   ├── stats.py           
+│   └── utils.py          
+├── notebooks/             
+│   ├── preprocess.ipynb   
+│   ├── stats_computation.ipynb  
+│   └── distribution.ipynb 
+├── data/
+│   └── geojson/         
+├── tif2cog.sh            
+└── main.py               
+```
+
+## Setup
 
 ```bash
+# Install dependencies
 uv sync
+
+# Activate environment
+source .venv/bin/activate
 ```
