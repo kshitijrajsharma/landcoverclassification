@@ -47,8 +47,59 @@ The codigo field corresponds to the different land cover samples found in the ar
 You can check the [data centroid file](./data/data_centroid.geojson) to visualize the  distribution interactively.
 
 
-### Project Setup 
+### Project Setup
+
+Land cover classification using drone imagery and polygon features with statistical analysis.
+
+### Project Structure
+
+```
+├── src/                    
+│   ├── preprocess.py      
+│   ├── stats.py           
+│   └── utils.py          
+├── notebooks/             
+│   ├── preprocess.ipynb   
+│   ├── stats_computation.ipynb  
+│   └── distribution.ipynb 
+├── data/
+│   └── geojson/         
+├── tif2cog.sh            
+└── main.py               
+```
+
+## Setup
 
 ```bash
+# Install dependencies
 uv sync
+
+# Activate environment
+source .venv/bin/activate
+```
+
+## Usage
+
+### Notebook Workflow
+
+1. **Dataset Distribution** - First, see the dataset distribution:
+   ```bash
+   jupyter notebook notebooks/distribution.ipynb
+   ```
+
+2. **Preprocessing** - Preprocess the data (download images, build URLs):
+   ```bash
+   jupyter notebook notebooks/preprocess.ipynb
+   ```
+
+3. **Stats Computation** - After preprocessing, build the features (compute raster statistics):
+   ```bash
+   jupyter notebook notebooks/stats_computation.ipynb
+   ```
+   This will build the features for your model.
+
+### Convert to COG
+Standardize images to Cloud Optimized GeoTIFF: ( This is part of preprocess notebook)
+```bash
+./tif2cog.sh data/images
 ```
