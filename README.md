@@ -55,16 +55,16 @@ Land cover classification using drone imagery and polygon features with statisti
 
 ```
 ├── src/                    
-│   ├── preprocess.py      
-│   ├── stats.py           
+│   ├── preprocess.py               # Utilities to build dataset from OAM files
+│   ├── stats.py                    # Functions to extract image features
 │   └── utils.py          
 ├── notebooks/             
-│   ├── preprocess.ipynb   
-│   ├── stats_computation.ipynb  
-│   └── distribution.ipynb 
+│   ├── preprocess.ipynb            # Notebook to run the dataset build
+│   ├── stats_computation.ipynb     # Notebook to run the feature extraction
+│   └── distribution.ipynb          # Notebook to explore data distribution
 ├── data/
-│   └── geojson/         
-├── tif2cog.sh            
+│   └── geojson/                    # Labeled data
+├── tif2cog.sh                      # Script to convert tif files to COG
 └── main.py               
 ```
 
