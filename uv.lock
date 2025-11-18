@@ -1,5 +1,5 @@
 version = 1
-revision = 3
+revision = 2
 requires-python = ">=3.12"
 
 [[package]]
@@ -81,6 +81,20 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/77/e9/df2358efd7659577435e2177bfa69cba6c33216681af51a707193dec162a/beautifulsoup4-4.14.2.tar.gz", hash = "sha256:2a98ab9f944a11acee9cc848508ec28d9228abfd522ef0fad6a02a72e0ded69e", size = 625822, upload-time = "2025-09-29T10:05:42.613Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/94/fe/3aed5d0be4d404d12d36ab97e2f1791424d9ca39c2f754a6285d59a3b01d/beautifulsoup4-4.14.2-py3-none-any.whl", hash = "sha256:5ef6fa3a8cbece8488d66985560f97ed091e22bbc4e9c2338508a9d5de6d4515", size = 106392, upload-time = "2025-09-29T10:05:43.771Z" },
+]
+
+[[package]]
+name = "boruta"
+version = "0.4.3"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "numpy" },
+    { name = "scikit-learn" },
+    { name = "scipy" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/83/ab/103f819f83e9e2833f95f3dfb5e6d162ad1616b136b96c683ad4d7de224c/Boruta-0.4.3.tar.gz", hash = "sha256:abd67119bb88c7d1675b0dfc78072e50b5ba1d32b7cc7664258a640ad3a495a4", size = 57656, upload-time = "2024-08-13T19:54:38.755Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/30/de/37bb80bba7fb7baa703b78fab37487b21b43fe4bb5d5a1ab09ecab9b76c6/Boruta-0.4.3-py3-none-any.whl", hash = "sha256:58cc1d7f180d0ee3aace5b171a25f00b7fd8e323a749954d899cc983b2924085", size = 57909, upload-time = "2024-08-13T19:54:37.359Z" },
 ]
 
 [[package]]
@@ -759,6 +773,7 @@ version = "0.0.1"
 source = { virtual = "." }
 dependencies = [
     { name = "asyncio" },
+    { name = "boruta" },
     { name = "gdown" },
     { name = "geopandas" },
     { name = "httpx" },
@@ -781,6 +796,7 @@ ops = [
 [package.metadata]
 requires-dist = [
     { name = "asyncio", specifier = ">=4.0.0" },
+    { name = "boruta", specifier = ">=0.4.3" },
     { name = "gdown", specifier = ">=5.2.0" },
     { name = "geopandas", specifier = ">=1.1.1" },
     { name = "httpx", specifier = ">=0.28.1" },
